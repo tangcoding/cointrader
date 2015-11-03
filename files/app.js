@@ -131,7 +131,7 @@ d3.json("/price_data_all/", function(error, json) {
 
   // filter data for time domain of upper chart
   data = data.filter(function(d) {
-    return d.date >= timeDomain[0];
+    return d.date >= timeDomain[0]&&d.date <= timeDomain[1];
   });
 
   // bisector only works on sorted data !!!!
@@ -343,6 +343,8 @@ function redraw(tickFormat,timeDomain) {
   }
 
   x.domain(timeDomain);
+  x.range([0, width]);
+
   xAxis.tickFormat(d3.time.format(tickFormat));
 
   //x.domain(d3.extent(data, function(d) { return d.updated_time; }));
@@ -371,7 +373,7 @@ function redraw(tickFormat,timeDomain) {
     // console.log(data);
 
     data = data.filter(function(d) {
-      return d.date >= timeDomain[0];
+      return d.date >= timeDomain[0]&&d.date <= timeDomain[1];
     });
 
 
@@ -388,9 +390,7 @@ function redraw(tickFormat,timeDomain) {
       // bisector only works on sorted data !!!!
       data.sort(function(a, b) { return a.date - b.date; });
     }
-
-    console.log(data);
-
+    // console.log(data);
 
    //  var svg = d3.select(".plot").transition();
    //  // Make the changes
