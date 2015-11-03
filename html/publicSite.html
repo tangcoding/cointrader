@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html ng-app="coin" ng-controller="ctrl">
+<head>
+<title>CoinTrader</title>
+<meta charset="utf-8">
+<link href='http://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Electrolize' rel='stylesheet' type='text/css'>
+
+<style type="text/css">
+body { font-family: 'Raleway', sans-serif; /*background-color: #002b36;*/ color: #586e75; text-align: center; }
+
+
+.login_wrap { position: absolute; top: 20px; right: 15px; text-align: right;}
+.login_wrap a { text-decoration: none; color: #2aa198; font-size: 14px; }
+.login_wrap a:visited { color: #2aa198; }
+.login_wrap a:hover { text-decoration: underline; }
+.login_wrap .screen_name { font-size: 12px; }
+
+.date_time_wrap { color: #93a1a1; font-size: 10px; width: 300px; margin: 25px auto 10px auto; font-family: 'Electrolize', sans-serif; letter-spacing: .1em; text-align: right;}
+.logo_wrap { font-size: 32px; margin: 0 auto 25px auto;  }
+
+.data_area { width: 100%; font-size: 14px; text-align: center; margin: 0 auto; }
+#btc-quote {width: 200px; margin: 25px auto; }
+.ticker { width: 300px; margin: 25px auto; font-size: 12px; }
+
+table { width: 300px; margin: 0 auto;}
+td { padding: 2px; padding-left: 15px; font-family: 'Electrolize', sans-serif; color: #657b83; }
+
+td.price_data { letter-spacing: .1em; color: #2aa198; }
+
+.cyan { color: #2aa198; }
+
+.currency { width: 300px;  margin: 25px auto; text-align: right; }
+
+.ad_wrap { /*border-bottom: 1px solid #586e75;*/ font-size: 9px; margin-bottom: 15px; padding-bottom: 5px; }
+
+.chart { width: 950px; height: 450px; margin: 0 auto; border-radius: 5px; border: 1px solid #ccc; box-shadow: 2px 2px 2px 3px #ccc; }
+.plot {width: 950px; height: 350px; }
+.range_buttons li{display: inline-block; margin: 15px 15px 0 15px; border-radius: 5px; border:1px solid #586e75; padding: 5px; color: #fff; background: #586e75;}
+.nav_chart { width: 950px; height: 100px; margin: 25px auto; }
+
+.axis path, .axis line { fill: none; stroke: #000; shape-rendering: crispEdges;}
+.line { fill: none; stroke: steelblue; stroke-width: 1.5px;}
+.area {fill: grey;}
+.viewport { stroke: grey; fill: black; fill-opacity: 0.1;}
+
+</style>
+{{ analytics|safe }}
+<script type="text/javascript" src="../../files/angular.min.js"></script>
+<script>
+var coin = angular.module("coin", [],
+  function($interpolateProvider) {
+    $interpolateProvider.startSymbol('[!');
+    $interpolateProvider.endSymbol('!]');
+}) ///
+coin.controller('ctrl', function($scope) {
+  $scope.coinbase_buy = {{ coinbase_buy|safe }};
+  $scope.coinbase_sell = {{ coinbase_sell|safe }};
+
+  $scope.bitstamp_prices = {{ bitstamp_prices|safe }};
+  $scope.buy_bitstamp = $scope.bitstamp_prices.bid;
+  $scope.sell_bitstamp = $scope.bitstamp_prices.ask;
+  $scope.btce_prices = {{ btce_prices|safe }};
+  $scope.usd_rate = {{ usd_rate|safe}};
+  $scope.buy_btce = $scope.btce_prices.ticker.buy;
+  $scope.sell_btce = $scope.btce_prices.ticker.sell;
+
+}) ///
+
+</script>
+
+</head>
+<body>
+
+<!-- upload historic data to datastore -->
+<!-- <form name="add_photo_form" method="post" action="/import_json" enctype="multipart/form-data">
+  <input type="file" name="csv_file" multiple required>
+  <input type="submit" class="btn btn-default" name="submit" value="Add">
+  <input type="reset" class="btn btn-default" value="Reset">
+</form> -->
+
+<div class="login_wrap"><a href="{{ login_key }}">{{ gate }}</a>
+  {% if user %}<br /><span class="screen_name">{{ user }}</span>{% endif %}
+</div>
+
+<div class="date_time_wrap">{{ date_time|safe }}</div>
+<div class="logo_wrap">Coin-Trader</div>
+
+<div class="data_area">
+
+  <div id="btc-quote"></div>
+  <script type="text/javascript" src="//cdn-gh.firebase.com/btcquote/embed.js"></script>
+
+  <div class="ticker">
+    <table>
+      <tr>
+        <td>&nbsp;</td>
+        <td>Buy</td>
+        <td>Sell</td>
+      </tr>
+      <tr>
+        <td>CoinBase</td>
+        <td class="price_data">[!coinbase_buy.total.amount!]</td>
+        <td class="price_data">[!coinbase_sell.total.amount!]</td>
+      </tr>
+      <tr>
+        <td>Bitstamp</td>
+        <td class="price_data">[!buy_bitstamp!]</td>
+        <td class="price_data">[!sell_bitstamp!]</td>
+      </tr>
+      <tr>
+        <td>BTC-E</td>
+        <td class="price_data">[!buy_btce!]</td>
+        <td class="price_data">[!sell_btce!]</td>
+      </tr>
+    </table>
+  </div><!-- -.ticker - -->
+
+  <div class="currency">
+    Currency Comparison<br /><span class="cyan">[!usd_rate!] USD</span> / <span class="cyan">1 BTC</span>
+  </div><!-- .currency -->
+
+</div><!-- - .data_area - -->
+
+<div class="chart">
+  <div class="range_buttons">
+      <ul>
+        <li type="button" onclick="timeRange('1year')">1 Year</li>
+        <li type="button" onclick="timeRange('6month')">6 Months</li>
+        <li type="button" onclick="timeRange('3month')">3 Months</li>
+        <li type="button" onclick="timeRange('1month')">1 Month </li>
+        <li type="button" onclick="timeRange('5day')">5 Days</li>
+        <li type="button" onclick="timeRange('1day')">1 Day</li>
+      </ul>
+  </div><!-- .range_buttons - -->
+
+  <div class="plot"></div><!-- .plot - -->
+</div><!-- - .chart - -->
+
+<div class="nav_chart"></div>
+<!-- <a href="/export_json"><button>json</button></a>
+<a href="/add_price"><button>add price</button></a> -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script type="text/javascript" src="../../files/app.js"></script>
+
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- Coin-Trader -->
+<div class="google_ads">
+  <div class="ad_wrap"></div>
+<ins class="adsbygoogle"
+     style="display:inline-block;width:305px;height:50px"
+     data-ad-client="ca-pub-0387298839743731"
+     data-ad-slot="6858778565"></ins>
+</div>
+<script>
+//(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+
+</body>
+</html>

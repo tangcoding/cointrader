@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html ng-app="coin" ng-controller="ctrl">
+<head>
+<title>CoinTrader</title>
+<meta charset="utf-8">
+<link href='http://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Electrolize' rel='stylesheet' type='text/css'>
+
+<style type="text/css">
+body { font-family: 'Raleway', sans-serif; /*background-color: #002b36;*/ color: #586e75; text-align: center; }
+
+
+.login_wrap { position: absolute; top: 20px; right: 15px; text-align: right;}
+.login_wrap a { text-decoration: none; color: #2aa198; font-size: 14px; }
+.login_wrap a:visited { color: #2aa198; }
+.login_wrap a:hover { text-decoration: underline; }
+.login_wrap .screen_name { font-size: 12px; }
+
+.date_time_wrap { color: #93a1a1; font-size: 10px; width: 300px; margin: 25px auto 10px auto; font-family: 'Electrolize', sans-serif; letter-spacing: .1em; text-align: right;}
+.logo_wrap { font-size: 32px; margin: 0 auto 25px auto;  }
+
+.data_area { width: 100%; font-size: 14px; text-align: center; margin: 0 auto; }
+#btc-quote {width: 200px; margin: 25px auto; }
+.ticker { width: 300px; margin: 25px auto; font-size: 12px; }
+
+table { width: 300px; margin: 0 auto;}
+td { padding: 2px; padding-left: 15px; font-family: 'Electrolize', sans-serif; color: #657b83; }
+
+td.price_data { letter-spacing: .1em; color: #2aa198; }
+
+.cyan { color: #2aa198; }
+
+.currency { width: 300px;  margin: 25px auto; text-align: right; }
+
+.ad_wrap { /*border-bottom: 1px solid #586e75;*/ font-size: 9px; margin-bottom: 15px; padding-bottom: 5px; }
+
+.chart { width: 950px; height: 450px; margin: 0 auto; border-radius: 5px; border: 1px solid #ccc; box-shadow: 2px 2px 2px 3px #ccc; }
+.plot {width: 950px; height: 350px; }
+.range_buttons li{display: inline-block; margin: 15px 15px 0 15px; border-radius: 5px; border:1px solid #586e75; padding: 5px; color: #fff; background: #586e75;}
+.nav_chart { width: 950px; height: 100px; margin: 25px auto; }
+
+.axis path, .axis line { fill: none; stroke: #000; shape-rendering: crispEdges;}
+.line { fill: none; stroke: steelblue; stroke-width: 1.5px;}
+.area {fill: grey;}
+.viewport { stroke: grey; fill: black; fill-opacity: 0.1;}
+
+path.candle {stroke: #000000;}
+
+path.candle.body { stroke-width: 0;}
+
+path.candle.up {fill: #00AA00; stroke: #00AA00;}
+
+path.candle.down {fill: #FF0000; stroke: #FF0000;}
+</style>
+<!-- {{ analytics|safe }}
+<script type="text/javascript" src="../../files/angular.min.js"></script>
+<script>
+var coin = angular.module("coin", [],
+  function($interpolateProvider) {
+    $interpolateProvider.startSymbol('[!');
+    $interpolateProvider.endSymbol('!]');
+}) ///
+coin.controller('ctrl', function($scope) {
+  $scope.coinbase_buy = {{ coinbase_buy|safe }};
+  $scope.coinbase_sell = {{ coinbase_sell|safe }};
+
+  $scope.bitstamp_prices = {{ bitstamp_prices|safe }};
+  $scope.buy_bitstamp = $scope.bitstamp_prices.bid;
+  $scope.sell_bitstamp = $scope.bitstamp_prices.ask;
+  $scope.btce_prices = {{ btce_prices|safe }};
+  $scope.usd_rate = {{ usd_rate|safe}};
+  $scope.buy_btce = $scope.btce_prices.ticker.buy;
+  $scope.sell_btce = $scope.btce_prices.ticker.sell;
+
+}) ///
+
+</script>
+ -->
+</head>
+<body>
+
+<div class="login_wrap"><a href="{{ login_key }}">{{ gate }}</a>
+  {% if user %}<br /><span class="screen_name">{{ user }}</span>{% endif %}
+</div>
+
+<div class="date_time_wrap">{{ date_time|safe }}</div>
+<div class="logo_wrap">Coin-Trader</div>
+
+<div class="data_area">
+
+  <div id="btc-quote"></div>
+  <script type="text/javascript" src="//cdn-gh.firebase.com/btcquote/embed.js"></script>
+
+  <div class="ticker">
+    <table>
+      <tr>
+        <td>&nbsp;</td>
+        <td>Buy</td>
+        <td>Sell</td>
+      </tr>
+      <tr>
+        <td>CoinBase</td>
+        <td class="price_data">[!coinbase_buy.total.amount!]</td>
+        <td class="price_data">[!coinbase_sell.total.amount!]</td>
+      </tr>
+      <tr>
+        <td>Bitstamp</td>
+        <td class="price_data">[!buy_bitstamp!]</td>
+        <td class="price_data">[!sell_bitstamp!]</td>
+      </tr>
+      <tr>
+        <td>BTC-E</td>
+        <td class="price_data">[!buy_btce!]</td>
+        <td class="price_data">[!sell_btce!]</td>
+      </tr>
+    </table>
+  </div><!-- -.ticker - -->
+
+  <div class="currency">
+    Currency Comparison<br /><span class="cyan">[!usd_rate!] USD</span> / <span class="cyan">1 BTC</span>
+  </div><!-- .currency -->
+
+</div><!-- - .data_area - -->
+
+<div class="chart">
+  <div class="range_buttons">
+      <ul>
+        <li type="button" onclick="timeRange('1year')">1 Year</li>
+        <li type="button" onclick="timeRange('6month')">6 Months</li>
+        <li type="button" onclick="timeRange('3month')">3 Months</li>
+        <li type="button" onclick="timeRange('1month')">1 Month </li>
+        <li type="button" onclick="timeRange('5day')">5 Days</li>
+        <li type="button" onclick="timeRange('1day')">1 Day</li>
+      </ul>
+  </div><!-- .range_buttons - -->
+
+  <div class="plot"></div><!-- .plot - -->
+</div><!-- - .chart - -->
+
+<div class="nav_chart"></div>
+<!-- <a href="/export_json"><button>json</button></a>
+<a href="/add_price"><button>add price</button></a> -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="http://techanjs.org/techan.min.js"></script>
+<script type="text/javascript" src="../../files/app.js"></script>
+
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- Coin-Trader -->
+<div class="google_ads">
+  <div class="ad_wrap"></div>
+<ins class="adsbygoogle"
+     style="display:inline-block;width:305px;height:50px"
+     data-ad-client="ca-pub-0387298839743731"
+     data-ad-slot="6858778565"></ins>
+</div>
+<script>
+var data; 
+
+var margin = {top: 30, right: 30, bottom: 30, left: 50},
+    width = 900 - margin.left - margin.right,
+    height = 350 - margin.top - margin.bottom;
+
+var rec_margin = 50;  
+
+var tickFormat = "%b %e";
+var timeDomain = [d3.time.day.offset(Date.now(),-365), new Date()];
+
+var x = d3.time.scale().domain(timeDomain).range([0, width]);
+// var x = techan.scale.financetime().range([0, width]);
+var y = d3.scale.linear().range([height, 0]);
+var y2 = d3.scale.linear().range([height, 0]);
+
+var candlestick = techan.plot.candlestick().xScale(x).yScale(y);
+
+var xAxis = d3.svg.axis().ticks(6).tickFormat(d3.time.format(tickFormat)).tickPadding(8).scale(x).orient("bottom");
+
+var yAxis = d3.svg.axis().scale(y).orient("left");
+var yAxis2 = d3.svg.axis().scale(y2).orient("right");
+
+// var sell_line = d3.svg.line()
+//     .x(function(d) { return x(d.updated_time); })
+//     .y(function(d) { return y(d.sell_price); });
+
+// var buy_line = d3.svg.line()
+//     .x(function(d) { return x(d.updated_time); })
+//     .y(function(d) { return y(d.buy_price); });  
+
+var zoom = d3.behavior.zoom()
+    .x(x)
+    .scaleExtent([1,20])
+    .on('zoom', function(){
+      redraw(tickFormat,x.domain());
+      updateViewportFromChart();
+    });
+
+var svg = d3.select(".plot").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .call(zoom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// --tooltip--
+var focus = svg.append("g") 
+    .style("display", "none");
+var bisectDate = d3.bisector(function(d) { return d.date; }).left;
+var formatDate = d3.time.format("%d-%b-%y");
+
+// --nav chart--
+var navWidth = width, 
+    navHeight = 100- margin.top - margin.bottom;
+
+var navTickFormat = "%b %y";
+var navTimeDomain = [d3.time.month.offset(Date.now(),-12), new Date()];
+
+var navx = d3.time.scale().domain(navTimeDomain).range([0, navWidth]);
+var navy = d3.scale.linear().range([navHeight, 0]);
+
+var navxAxis = d3.svg.axis().ticks(6).tickFormat(d3.time.format(navTickFormat)).tickPadding(8).scale(navx).orient("bottom");
+
+// var navyAxis = d3.svg.axis().scale(navy).orient("left");
+
+var navArea = d3.svg.area()
+    .x(function(d) { return navx(d.date); })
+    .y0(navHeight)
+    .y1(function(d) { return navy((d.high+d.low)/2); });
+
+var viewport = d3.svg.brush()
+    .x(navx)
+    .on("brush", function () {
+        tickFormat = "%b %e";
+        x.domain(viewport.empty() ? navx.domain() : viewport.extent());
+        redraw(tickFormat,x.domain());
+    });
+
+var navChart = d3.select(".nav_chart").append("svg")
+    .attr("width", navWidth + margin.left + margin.right)
+    .attr("height", navHeight + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+navChart.append("g")
+    .attr("class", "viewport")
+    .call(viewport)
+    .selectAll("rect")
+    .attr("height", navHeight);
+
+//-- draw data --
+// draw upper chart
+var start_time = timeDomain[0].getTime() / 1000;
+var end_time = timeDomain[1].getTime() / 1000;
+var data_url = "/price_data?" + start_time + "?" + end_time;
+
+// console.log(data_url);
+d3.csv("BITCOIN-BITSTAMPUSD.csv", function(error, json) {
+  if (error) throw error;
+  // console.log(json);
+  data = json;
+  // console.log(data);
+
+  data = data.map(function(d) {
+      // console.log(Date.parse(d.Date));
+      return {
+          date: new Date(d.Date),
+          open: +d.Open,
+          high: +d.High,
+          low: +d.Low,
+          close: +d.Close
+      };
+  });
+
+
+  data = data.filter(function(d) {
+    return d.date >= timeDomain[0];
+  });
+
+  // bisector only works on sorted data !!!!
+  data.sort(function(a, b) { return a.date - b.date; });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+  // y.domain(d3.extent(data, function(d) { return d.sell_price; }));
+
+  var ymin =  d3.min(data, function(d) { return d.low; });
+  var ymax =  d3.max(data, function(d) { return d.high; });
+  // console.log("min:"+ymin1+";"+ymin2);
+  // console.log("max:"+ymax1+";"+ymax2);
+
+  // var ymin = ymin1 < ymin2 ? ymin1:ymin2;
+  // var ymax = ymax1 > ymax2 ? ymax1:ymax2;
+  // // console.log("final:"+ymin+";"+ymax);
+
+  y.domain([ymin, ymax]);
+  console.log(y.domain()[0],y.domain()[1])
+  // x.domain(data.map(accessor.d));
+  // y.domain(techan.scale.plot.ohlc(data, accessor).domain());
+  
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis)
+
+svg.append("g")
+    .attr("class", "y axis")
+    .call(yAxis)
+  .append("text")
+    // .attr("transform", "rotate(-90)")
+    .attr("y", 0)
+    .attr("dy", "-0.71em")
+    .style("text-anchor", "end")
+    .text("Price");
+
+svg.append("g")
+    .attr("class", "y axis")
+    .attr("transform", "translate(" + width +"," + 0 + ")")
+    .call(yAxis2)
+  .append("text")
+    .attr("y", 0)
+    .attr("dy", "-0.71em")
+    .style("text-anchor", "end")
+    .text("Percentage");
+
+  // svg.append("path")
+  //     .data([data])
+  //     .attr("class", "buy line")
+  //     .attr("d", buy_line)
+  //     .style("stroke-dasharray", ("6,3"));
+
+  svg.selectAll("rect")
+    .data(data)
+    .enter().append("rect")
+    .attr("class","oc")
+    .attr("x", function(d) { return x(d.date); })
+    .attr("y", function(d) {return y(max(d.open, d.close));})     
+    .attr("height", function(d) { return y(min(d.open, d.close))-y(max(d.open, d.close));})
+    .attr("width", function(d) { return 0.5 * (width - 2*margin.left)/data.length; })
+    .attr("fill",function(d) { return d.open > d.close ? "red" : "green" ;});
+
+  //   console.log("lala");
+
+  svg.selectAll("line.stem")
+    .data(data)
+    .enter().append("line")
+    .attr("class", "stem")
+    .attr("x1", function(d) { return x(d.date) + 0.25 * (width - 2 * margin.left)/ data.length;})
+    .attr("x2", function(d) { return x(d.date) + 0.25 * (width - 2 * margin.left)/ data.length;})        
+    .attr("y1", function(d) { return y(d.high);})
+    .attr("y2", function(d) { return y(d.low); })
+    .attr("stroke", function(d){ return d.open > d.close ? "red" : "green"; })
+
+  // svg.append("line")
+  //    .attr("x1",(width-margin.right-30))
+  //    .attr("y1",15)
+  //    .attr("x2",(width-margin.right-10))
+  //    .attr("y2",15)
+  //    .attr("stroke","steelblue")
+  //    .style("stroke-dasharray", ("6,3"));
+
+  // svg.append("text")
+  //    .attr("fill","black")
+  //    .text("Sell")
+  //    .attr("transform", "translate(" + (width-margin.right) + ", 5)");
+
+//--tooltip--
+
+   // append the x line
+    focus.append("line")
+        .attr("class", "x_line")
+        .style("stroke", "grey")
+        .style("stroke-dasharray", "3,3")
+        .style("opacity", 0.5)
+        .attr("y1", 0)
+        .attr("y2", height);
+
+    // append the y line
+    focus.append("line")
+        .attr("class", "y_line")
+        .style("stroke", "grey")
+        .style("stroke-dasharray", "3,3")
+        .style("opacity", 0.5)
+        .attr("x1", width)
+        .attr("x2", width);
+
+    // place the value at the intersection
+    focus.append("text")
+        .attr("class", "y1")
+        .style("stroke", "grey")
+        .style("stroke-width", "3.5px")
+        .style("opacity", 0.8)
+        .attr("dx", 8)
+        .attr("dy", "-.3em");
+    focus.append("text")
+        .attr("class", "y2")
+        .attr("dx", 8)
+        .attr("dy", "-.3em")
+        .attr("fill","blue");
+
+    // place the date at the intersection
+    focus.append("text")
+        .attr("class", "y3")
+        .style("stroke", "grey")
+        .style("stroke-width", "3.5px")
+        .style("opacity", 0.8)
+        .attr("dx", 8)
+        .attr("dy", "1em");
+    focus.append("text")
+        .attr("class", "y4")
+        .attr("dx", 8)
+        .attr("dy", "1em")
+        .attr("fill","blue");
+    
+    // append the rectangle to capture mouse
+    svg.append("rect")
+        .attr("class","tooltip")
+        .attr("width", width)
+        .attr("height", height)
+        .style("fill", "none")
+        .style("pointer-events", "all")
+        .on("mouseover", function() { focus.style("display", null); })
+        .on("mouseout", function() { focus.style("display", "none"); })
+        .on("mousemove", mousemove);
+
+    function mousemove() {
+      var x0 = x.invert(d3.mouse(this)[0]),
+          i = bisectDate(data, x0, 1),
+          d0 = data[i - 1],
+          d1 = data[i],
+          d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+
+          console.log(i);
+          console.log(d0);
+          console.log(d1);
+
+      // focus.select("text.y1")
+      //     .attr("transform",
+      //           "translate(" + x(d.date) + "," +
+      //                          y(d.close) + ")")
+      //     .text(d.close);
+
+      focus.select("text.y1")
+          .attr("transform",
+                "translate(" + 0 + "," +
+                               y(d.close) + ")")
+          .text(d.close);
+
+      focus.select("text.y2")
+          .attr("transform",
+                "translate(" + 0+ "," +
+                               y(d.close) + ")")
+          .text(d.close);
+
+      focus.select("text.y3")
+          .attr("transform",
+                "translate(" + x(d.date) + "," +
+                               (height-20) + ")")
+          .text(formatDate(d.date));
+
+      focus.select("text.y4")
+          .attr("transform",
+                "translate(" + x(d.date) + "," +
+                               (height-20) + ")")
+          .text(formatDate(d.date));
+
+      focus.select(".x_line")
+          .attr("transform",
+                "translate(" + x(d.date) + "," +
+                               y(d.close) + ")")
+                     .attr("y2", height - y(d.close));
+
+      focus.select(".y_line")
+          .attr("transform",
+                "translate(" + width * -1 + "," +
+                               y(d.close) + ")")
+                     .attr("x2", width + width);
+  }
+
+});
+
+// draw Nav chart
+d3.csv("BITCOIN-BITSTAMPUSD.csv", function(error, json) {
+  if (error) throw error;
+   var accessor = candlestick.accessor();
+  var nav_data = json;
+  // console.log(nav_data);
+
+  nav_data = nav_data.map(function(d) {
+      // console.log(Date.parse(d.Date));
+      return {
+          date: new Date(d.Date),
+          high: +d.High,
+          low: +d.Low
+      };
+  });
+
+    // console.log(nav_data);
+
+  navy.domain(d3.extent(nav_data, function(d) { return (d.high+d.low)/2; }));
+
+  navChart.append("g")
+      .attr("class", "navx axis")
+      .attr("transform", "translate(0," + navHeight + ")")
+      .call(navxAxis)
+
+  navChart.append("path")
+    .datum(nav_data)
+    .attr("class", "area")
+    .attr("d", navArea);
+
+});
+
+
+function redraw(tickFormat,timeDomain) {
+  // console.log(tickFormat);
+  // console.log(timeDomain);
+  // var diff = timeDomain[1] - timeDomain[0];
+
+  // if(diff*1.15741e-8 < 1.1){
+  //   tickFormat = "%H:%M";
+  //   xAxis.ticks(6);
+  // }
+  // else if(diff*1.15741e-8 >1 && diff*1.15741e-8 < 5){
+  //   tickFormat = "%b %e";
+  //   xAxis.ticks(3);
+
+  // }
+
+  x.domain(timeDomain);
+  xAxis.tickFormat(d3.time.format(tickFormat));
+
+  //x.domain(d3.extent(data, function(d) { return d.updated_time; }));
+
+  var start_time = timeDomain[0].getTime() / 1000;
+  var end_time = timeDomain[1].getTime() / 1000;
+  var data_url = "/price_data?" + start_time + "?" + end_time;
+  // console.log(data_url);
+
+  d3.csv("BITCOIN-BITSTAMPUSD.csv", function(error, json) {
+    if (error) throw error;
+    // console.log(json);
+    var data = json;
+
+    data = data.map(function(d) {
+        // console.log(Date.parse(d.Date));
+        return {
+            date: new Date(d.Date),
+            open: +d.Open,
+            high: +d.High,
+            low: +d.Low,
+            close: +d.Close
+        };
+    });
+
+
+    data = data.filter(function(d) {
+      return d.date >= timeDomain[0];
+    });
+
+
+    var data_length = 100;
+    if(data.length > 0){
+      ymin =  d3.min(data, function(d) { return d.low; });
+      ymax =  d3.max(data, function(d) { return d.high; });
+
+      y.domain([ymin, ymax]);
+      console.log(y.domain()[0],y.domain()[1])   
+
+      data_length = data.length;  
+
+      // bisector only works on sorted data !!!!
+      data.sort(function(a, b) { return a.date - b.date; });
+    }
+
+    // console.log(data);
+
+
+   //  var svg = d3.select(".plot").transition();
+   //  // Make the changes
+   //      svg.select(".sell.line")   // change the line
+   //          .duration(300)
+   //          .attr("d", sell_line(data));
+   //      svg.select(".buy.line")   // change the line
+   //          .duration(300)
+   //          .attr("d", buy_line(data));
+   //      svg.select(".x.axis") // change the x axis
+   //          .duration(300)
+   //          .call(xAxis);
+   //      svg.select(".y.axis") // change the y axis
+   //          .duration(300)
+   //          .call(yAxis);
+   // }); 
+  // var svg = d3.select(".plot").transition();
+
+  // specify the selection to g !!!!
+  var rects = d3.select(".plot svg g").selectAll("rect.oc").data(data);
+
+  rects.transition()
+    .duration(100)
+    .attr("class","oc")
+    .attr("x", function(d) { return x(d.date); })
+    .attr("y", function(d) {return y(max(d.open, d.close));})     
+    .attr("height", function(d) { return y(min(d.open, d.close))-y(max(d.open, d.close));})
+    .attr("width", function(d) { return 0.5 * (width - 2*margin.left)/data_length; })
+    .attr("fill",function(d) { return d.open > d.close ? "red" : "green" ;});
+
+  rects.enter()
+   .append("svg:rect")
+    .attr("class","oc")
+    .attr("x", function(d) { return x(d.date); })
+    .attr("y", function(d) {return y(max(d.open, d.close));})     
+    .attr("height", function(d) { return y(min(d.open, d.close))-y(max(d.open, d.close));})
+    .attr("width", function(d) { return 0.5 * (width - 2*margin.left)/data_length; })
+    .attr("fill",function(d) { return d.open > d.close ? "red" : "green" ;});
+
+  rects.exit().remove();
+
+  // console.log(d3.select(".plot").selectAll("rect"));
+
+  var lines = d3.select(".plot svg g").selectAll("line.stem").data(data);
+
+  lines.transition()
+    .duration(100)
+    .attr("class", "stem")
+    .attr("x1", function(d) { return x(d.date) + 0.25 * (width - 2 * margin.left)/ data_length;})
+    .attr("x2", function(d) { return x(d.date) + 0.25 * (width - 2 * margin.left)/ data_length;})        
+    .attr("y1", function(d) { return y(d.high);})
+    .attr("y2", function(d) { return y(d.low); })
+    .attr("stroke", function(d){ return d.open > d.close ? "red" : "green"; });
+
+  lines.enter()
+   .append("svg:line")
+    .attr("class", "stem")
+    .attr("x1", function(d) { return x(d.date) + 0.25 * (width - 2 * margin.left)/ data_length;})
+    .attr("x2", function(d) { return x(d.date) + 0.25 * (width - 2 * margin.left)/ data_length;})        
+    .attr("y1", function(d) { return y(d.high);})
+    .attr("y2", function(d) { return y(d.low); })
+    .attr("stroke", function(d){ return d.open > d.close ? "red" : "green"; });
+
+  lines.exit().remove();
+
+  console.log(d3.select(".plot").selectAll("line.stem"));
+
+   var svg = d3.select(".plot").transition();
+  // Make the changes
+      svg.select(".x.axis") // change the x axis
+          // .duration(300)
+          .call(xAxis);
+      svg.select(".y.axis") // change the y axis
+          // .duration(300)
+          .call(yAxis);
+
+  //tooltip
+  var rect_tooltip = d3.select(".plot svg").selectAll("rect.tooltip").data(data);
+      rect_tooltip.on("mousemove", mousemove);
+
+    function mousemove() {
+      var x0 = x.invert(d3.mouse(this)[0]),
+          i = bisectDate(data, x0, 1),
+          d0 = data[i - 1],
+          d1 = data[i],
+          d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+
+          console.log(i);
+          console.log(d0);
+          console.log(d1);
+
+      focus.select("text.y1")
+          .attr("transform",
+                "translate(" + 0 + "," +
+                               y(d.close) + ")")
+          .text(d.close);
+
+
+      focus.select("text.y2")
+          .attr("transform",
+                "translate(" + 0 + "," +
+                               y(d.close) + ")")
+          .text(d.close);
+
+      focus.select("text.y3")
+          .attr("transform",
+                "translate(" + x(d.date) + "," +
+                               (height-20) + ")")
+          .text(formatDate(d.date));
+
+      focus.select("text.y4")
+          .attr("transform",
+                "translate(" + x(d.date) + "," +
+                               (height-20) + ")")
+          .text(formatDate(d.date));
+
+      focus.select(".x_line")
+          .attr("transform",
+                "translate(" + x(d.date) + "," +
+                               y(d.close) + ")")
+                     .attr("y2", height - y(d.close));
+
+      focus.select(".y_line")
+          .attr("transform",
+                "translate(" + width * -1 + "," +
+                               y(d.close) + ")")
+                     .attr("x2", width + width);
+  }
+   // if(x.domain() !== viewport.extent()) updateViewportFromChart();
+ });  
+}
+
+
+function timeRange(timeDomainString) {
+  this.timeDomainString = timeDomainString;
+  // console.log(this.timeDomainString );
+  switch (timeDomainString) {
+    case "1day":
+      tickFormat = "%H:%M";
+      timeDomain = [d3.time.day.offset(Date.now(), -1), new Date() ];
+      break;
+    case "5day":
+      tickFormat = "%b %e";
+      timeDomain = [d3.time.day.offset(Date.now(), -5),new Date() ];
+      // console.log(d3.time.day.offset(getEndDate(), -7));
+      // console.log(getEndDate());
+      break;
+    case "1month":
+      tickFormat = "%b %e";
+      timeDomain = [d3.time.day.offset(Date.now(), -30), new Date()];
+      break;
+    case "3month":
+      tickFormat = "%b %e";
+      timeDomain = [d3.time.month.offset(Date.now(), -3), new Date()];
+      break;
+    case "6month":
+      tickFormat = "%b %e '%y";
+      timeDomain = [d3.time.month.offset(Date.now(), -6), new Date() ];
+      break;
+    case "1year":
+      tickFormat = "%b '%y";
+      timeDomain = [d3.time.month.offset(Date.now(), -12), new Date() ];
+      break;
+    default:
+      tickFormat = "%H:%M"
+  }
+  // console.log(format);
+  // console.log(timeDomain);
+  redraw(tickFormat, timeDomain);
+  updateViewportFromChart();
+}
+
+function updateViewportFromChart() {
+
+    if ((x.domain()[0] <= navx.domain()[0] ) && (x.domain()[1] >= navx.domain()[1] )) {
+
+        viewport.clear();
+    }
+    else {
+
+        viewport.extent(x.domain());
+    }
+
+    navChart.select('.viewport').call(viewport);
+}
+
+function min(a, b){ return a < b ? a : b ; }
+             
+function max(a, b){ return a > b ? a : b; }    
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+    body {
+        font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+
+    path.candle {
+        stroke: #000000;
+    }
+
+    path.candle.body {
+        stroke-width: 0;
+    }
+
+    path.candle.up {
+        fill: #00AA00;
+        stroke: #00AA00;
+    }
+
+    path.candle.down {
+        fill: #FF0000;
+        stroke: #FF0000;
+    }
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://techanjs.org/techan.min.js"></script>
+<script>
+
+    var margin = {top: 20, right: 20, bottom: 30, left: 50},
+            width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+    var dateFormat = d3.time.format("%m/%d/%y");
+
+    var x = techan.scale.financetime()
+            .range([0, width]);
+// var timeDomain = [d3.time.day.offset(Date.now(),-365), new Date()];
+// var x = d3.time.scale().domain(timeDomain).range([0, width]);
+
+    var y = d3.scale.linear()
+            .range([height, 0]);
+
+    var candlestick = techan.plot.candlestick()
+            .xScale(x)
+            .yScale(y);
+
+    var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left");
+
+    var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    d3.csv("BITCOIN-BITSTAMPUSD.csv", function(error, data) {
+        var accessor = candlestick.accessor(),
+            timestart = Date.now();
+
+        data = data.map(function(d) {
+            // console.log(Date.parse(d.Date));
+            return {
+                date: new Date(d.Date),
+                open: +d.Open,
+                high: +d.High,
+                low: +d.Low,
+                close: +d.Close
+            };
+        }).sort(function(a, b) { return d3.ascending(accessor.d(a), accessor.d(b)); });
+
+console.log(data);
+
+        x.domain(data.map(accessor.d));
+        y.domain(techan.scale.plot.ohlc(data, accessor).domain());
+
+console.log(x.domain());
+
+        svg.append("g")
+                .datum(data)
+                .attr("class", "candlestick")
+                .call(candlestick);
+
+        svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+        console.log("lala");
+
+        svg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Price ($)");
+
+        console.log("Render time: " + (Date.now()-timestart));
+    });
+
+console.log("lala");
+</script>
